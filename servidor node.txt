@@ -1,0 +1,59 @@
+npm install cors --save
+npm install jsonwebtoken --save
+npm install express-jwt --save
+npm install express --save
+
+// Função Login adicionar no SERVIDOR no queries
+  this.login = function(dados, resposta) {
+      conexao.obter(function(er, cn) {
+         cn.query('select * from usuarios where ra=? and senha=? ',[dados.ra, dados.senha], function(error, resultado) {
+            cn.release();
+            if (error) {
+               resposta.send('error');
+            } else {
+               if (resultado.length == 0) {
+                  console.log('Usuário não encontrado !');
+                  resposta.send('nofound');
+               } else {
+                  var token = jwt.sign({
+                     user: dados.nome,
+                     nivel: dados.nivel,
+                     rol: 'admin'
+                  },'token',{expiresIn: '120s'});
+                  resposta.send(token);
+               }
+            }
+         })
+      })
+   }
+   
+///   nas routs
+
+  app.post('/auth/login/',function(solicitacao, resposta){
+       db.login(solicitacao.body, resposta);
+    })
+	
+	
+	
+// cors.js
+
+function AllowCrossDomain() {
+
+   this.permissao = function(req, res, next) {
+      var whiteList = [
+         'http://localhost:4200',
+         'http://google.com.br'
+      ];
+
+      var origem = req.headers.origin;
+      if (whiteList.indexOf(origem) >= -1) {
+         res.setHeader('Access-Control-Allow-Origin', origem);
+      }
+      //res.header('Access-Control-Allow-Origin','');
+      res.header('Access-Control-Allow-Headers','Content-Type, Authorization');
+      res.header('Access-Control-Allow-Methods','GET,PUT,POST,DELETE,OPTIONS');
+      next();
+   }
+}
+
+module.exports = new AllowCrossDomain();	
